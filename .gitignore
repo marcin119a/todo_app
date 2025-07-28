@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Django
+*.sqlite3
+*.log
+media/
+staticfiles/
+
+# Virtualenv
+venv/
+ENV/
+.env
+.env.*
+
+# VSCode
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Test/coverage
+.coverage
+htmlcov/
+
+# System
+Thumbs.db
+
+# Pytest
+.cache/
+
+# Migrations
+*/migrations/__pycache__/
+*/migrations/*.pyc
+
+# IDEs
+.idea/
+*.iml 
