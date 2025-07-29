@@ -55,8 +55,9 @@ def add_task(request):
 @login_required
 def complete_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    task.completed = True
-    task.save()
+    if request.method == 'POST':
+        task.completed = 'completed' in request.POST
+        task.save()
     return redirect('task_list')
 
 @login_required
@@ -78,6 +79,20 @@ def add_project(request):
     else:
         form = ProjectForm()
     return render(request, 'todo/project/add_project.html', {'form': form})
+
+
+@login_required
+def edit_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id, user=request.user)
+    if request.method == 'POST':
+        form = ProjectForm(request.POST, instance=project)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Projekt został zaktualizowany!')
+            return redirect('task_list')
+    else:
+        form = ProjectForm(instance=project)
+    return render(request, 'todo/project/edit_project.html', {'form': form, 'project': project})
 
 
 @login_required

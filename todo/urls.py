@@ -18,3 +18,7 @@ urlpatterns += [
     path('calendar/', calendar_view, name='calendar'),
 ]
 
+urlpatterns += [
+    path('edit_project/<int:project_id>/', views.edit_project, name='edit_project'),
+]
+

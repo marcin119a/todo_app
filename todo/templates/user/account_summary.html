@@ -1,19 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2>Podsumowanie konta</h2>
-  <h4>Twoje projekty:</h4>
-  <ul>
-    {% for project in projects %}
-      <li>{{ project.name }}</li>
-    {% empty %}
-      <li>Brak projektów</li>
-    {% endfor %}
-  </ul>
-  <h4>Statystyki zadań:</h4>
-  <ul>
-    <li>Wszystkie zadania: {{ total }}</li>
-    <li>Ukończone: {{ completed }}</li>
-    <li>Zaległe: {{ overdue }}</li>
-    <li>Zbliżające się (3 dni): {{ upcoming }}</li>
-  </ul>
+  <div class="container py-4">
+    <h2 class="mb-4">Podsumowanie konta</h2>
+    <div class="row">
+      <div class="col-md-6">
+        <h4 class="mb-3">Twoje projekty:</h4>
+        <ul class="list-group mb-4">
+          {% for project in projects %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ project.name }}</span>
+              <a href="{% url 'edit_project' project.id %}" class="btn btn-outline-primary btn-sm">Edytuj</a>
+            </li>
+          {% empty %}
+            <li class="list-group-item">Brak projektów</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <h4 class="mb-3">Statystyki zadań:</h4>
+        <ul class="list-group">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>Wszystkie zadania:</span>
+            <span class="badge bg-primary rounded-pill">{{ total }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>Ukończone:</span>
+            <span class="badge bg-success rounded-pill">{{ completed }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>Zaległe:</span>
+            <span class="badge bg-danger rounded-pill">{{ overdue }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>Zbliżające się (3 dni):</span>
+            <span class="badge bg-warning text-dark rounded-pill">{{ upcoming }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
 {% endblock %}

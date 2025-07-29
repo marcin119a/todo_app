@@ -20,8 +20,10 @@
     </div>
     <div class="mb-3">
       <label for="id_avatar" class="form-label">Awatar</label><br>
-      {% if profile_form.instance.avatar %}
-        <img src="{{ profile_form.instance.avatar.url }}" alt="Awatar" class="mb-2" style="max-width:100px; max-height:100px; display:block;">
+      {% if profile_form.instance.avatar and profile_form.instance.avatar.url %}
+        <img src="{{ profile_form.instance.avatar.path }}" alt="Awatar" class="mb-2" style="max-width:100px; max-height:100px; display:block;">
+      {% else %}
+        <img src="/static/img/default_avatar.png" alt="Brak awatara" class="mb-2" style="max-width:100px; max-height:100px; display:block;">
       {% endif %}
       {{ profile_form.avatar }}
       {% for error in profile_form.avatar.errors %}
