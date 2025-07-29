@@ -1,9 +1,9 @@
 from django.urls import path
-from .views import add_project, AddMemberAPIView, calendar_view, edit_project, project_list
+from .views import ProjectCreateView, AddMemberAPIView, calendar_view, ProjectUpdateView, project_list
 
 
 urlpatterns = [
-    path('add_project/', add_project, name='add_project'),
+    path('add_project/', ProjectCreateView.as_view(), name='add_project'),
     path('api/<int:pk>/add-member/', AddMemberAPIView.as_view(), name='api_add_member'),
 ]
 
@@ -12,7 +12,7 @@ urlpatterns += [
 ]
 
 urlpatterns += [
-    path('edit_project/<int:project_id>/',edit_project, name='edit_project'),
+    path('edit_project/<int:project_id>/', ProjectUpdateView.as_view(), name='edit_project'),
 ]
 
 urlpatterns += [

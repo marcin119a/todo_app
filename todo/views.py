@@ -11,6 +11,8 @@ from django.utils import timezone
 from datetime import timedelta
 from django.shortcuts import render
 from comments.models import Comment
+from django.views.generic import UpdateView
+from django.urls import reverse_lazy
 
 # Task list
 @login_required
@@ -70,24 +72,22 @@ def task_detail(request, task_id):
     return render(request, 'todo/task/task_detail.html', {'task': task, 'comments': comments})
 
 
+class ProjectUpdateView(UpdateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'todo/project/edit_project.html'
+    pk_url_kwarg = 'project_id'
+    success_url = reverse_lazy('task_list')
 
-@login_required
-def edit_project(request, project_id):
-    project = get_object_or_404(Project, id=project_id, user=request.user)
-    if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=project)
-        if form.is_valid():
-            project = form.save()
-            # Zaktualizuj członków projektu
-            project.members.set(form.cleaned_data['members'])
-            messages.success(request, 'Projekt został zaktualizowany!')
-            return redirect('task_list')
-    else:
-        form = ProjectForm(instance=project)
-    return render(request, 'project/edit_project.html', {'form': form, 'project': project})
+    def get_queryset(self):
+        # Tylko projekty użytkownika
+        return Project.objects.filter(user=self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Zaktualizuj członków projektu
+        self.object.members.set(form.cleaned_data['members'])
+        messages.success(self.request, 'Projekt został zaktualizowany!')
+        return response
 
 
-@login_required
-def calendar_view(request):
-    tasks = Task.objects.filter(user=request.user)
-    return render(request, 'project/calendar.html', {'tasks': tasks})

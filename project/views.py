@@ -10,25 +10,26 @@ from django.contrib.auth import get_user_model
 from .models import Project
 from todo.models import Task
 from django.shortcuts import get_object_or_404
+from django.views.generic import CreateView, UpdateView
+from django.urls import reverse_lazy
 
 User = get_user_model()
 
-# Create your views here.
 
 
-@login_required
-def add_project(request):
-    if request.method == 'POST':
-        form = ProjectForm(request.POST)
-        if form.is_valid():
-            project = form.save(commit=False)
-            project.user = request.user
-            project.save()
-            messages.success(request, 'Projekt został dodany!')
-            return redirect('task_list')
-    else:
-        form = ProjectForm()
-    return render(request, 'project/add_project.html', {'form': form})
+class ProjectCreateView(CreateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'project/add_project.html'
+    success_url = reverse_lazy('task_list')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        response = super().form_valid(form)
+        self.object.members.set(form.cleaned_data['members'])
+        messages.success(self.request, 'Projekt został dodany!')
+        return response
+
 
 
 class AddMemberAPIView(APIView):
@@ -51,20 +52,24 @@ def project_list(request):
     projects = Project.objects.filter(user=request.user)
     return render(request, 'project/project_list.html', {'projects': projects})
 
-@login_required
-def edit_project(request, project_id):
-    project = get_object_or_404(Project, id=project_id, user=request.user)
-    if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=project)
-        if form.is_valid():
-            project = form.save()
-            # Zaktualizuj członków projektu
-            project.members.set(form.cleaned_data['members'])
-            messages.success(request, 'Projekt został zaktualizowany!')
-            return redirect('task_list')
-    else:
-        form = ProjectForm(instance=project)
-    return render(request, 'project/edit_project.html', {'form': form, 'project': project})
+class ProjectUpdateView(UpdateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'project/edit_project.html'
+    pk_url_kwarg = 'project_id'
+    success_url = reverse_lazy('task_list')
+
+    def get_queryset(self):
+        # Tylko projekty użytkownika
+        return Project.objects.filter(user=self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Zaktualizuj członków projektu
+        self.object.members.set(form.cleaned_data['members'])
+        messages.success(self.request, 'Projekt został zaktualizowany!')
+        return response
+
 
 
 @login_required
