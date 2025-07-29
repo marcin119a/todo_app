@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 class="mb-4">Rejestracja</h2>
+  <form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="mb-3">
+        <label for="id_{{ field.name }}" class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+          <div class="form-text">{{ field.help_text }}</div>
+        {% endif %}
+        {% for error in field.errors %}
+          <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Zarejestruj się</button>
+  </form>
+{% endblock %} 

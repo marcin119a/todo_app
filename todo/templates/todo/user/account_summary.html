@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Podsumowanie konta</h2>
+  <h4>Twoje projekty:</h4>
+  <ul>
+    {% for project in projects %}
+      <li>{{ project.name }}</li>
+    {% empty %}
+      <li>Brak projektów</li>
+    {% endfor %}
+  </ul>
+  <h4>Statystyki zadań:</h4>
+  <ul>
+    <li>Wszystkie zadania: {{ total }}</li>
+    <li>Ukończone: {{ completed }}</li>
+    <li>Zaległe: {{ overdue }}</li>
+    <li>Zbliżające się (3 dni): {{ upcoming }}</li>
+  </ul>
+{% endblock %}

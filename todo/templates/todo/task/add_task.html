@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+  <h2 class="mb-4">Dodaj zadanie</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="title" class="form-label">Tytuł zadania</label>
+      <input type="text" class="form-control" id="title" name="title" placeholder="Tytuł zadania" required>
+    </div>
+    <div class="mb-3">
+      <label for="priority" class="form-label">Priorytet</label>
+      <input type="number" class="form-control" id="priority" name="priority" min="1" max="5" value="1" required>
+    </div>
+    <div class="mb-3">
+      <label for="project" class="form-label">Projekt</label>
+      <select class="form-select" id="project" name="project">
+        <option value="">Brak</option>
+        {% for project in projects %}
+          <option value="{{ project.id }}">{{ project.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="completed" name="completed">
+      <label class="form-check-label" for="completed">Zadanie ukończone</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Dodaj</button>
+    <a href="{% url 'task_list' %}" class="btn btn-secondary ms-2">Powrót do listy</a>
+  </form>
+</div>
+{% endblock %} 
