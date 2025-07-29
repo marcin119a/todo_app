@@ -6,7 +6,30 @@
     <title>{% block title %}Todo App{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    {% block extra_head %}{% endblock %}
+    {% block extra_head %}
+      <style>
+        body.dark-mode {
+          background-color: #181a1b !important;
+          color: #f1f1f1 !important;
+        }
+        .dark-mode .navbar, .dark-mode .bg-light {
+          background-color: #23272b !important;
+        }
+        .dark-mode .card, .dark-mode .form-control, .dark-mode .btn, .dark-mode .alert {
+          background-color: #23272b !important;
+          color: #f1f1f1 !important;
+          border-color: #444 !important;
+        }
+        .dark-mode .form-control {
+          background-color: #23272b !important;
+          color: #f1f1f1 !important;
+        }
+        .dark-mode .btn-primary {
+          background-color: #375a7f !important;
+          border-color: #375a7f !important;
+        }
+      </style>
+    {% endblock %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -24,6 +47,10 @@
                     <a class="btn btn-outline-success me-2" href="{% url 'login' %}">Logowanie</a>
                     <a class="btn btn-link" href="{% url 'password_reset' %}">Reset hasła</a>
                 {% endif %}
+                <div class="form-check form-switch ms-3">
+                  <input class="form-check-input" type="checkbox" id="themeSwitch">
+                  <label class="form-check-label" for="themeSwitch" id="themeSwitchLabel">Ciemny motyw</label>
+                </div>
             </div>
         </div>
     </nav>
@@ -32,6 +59,25 @@
     </div>
     <!-- Bootstrap JS (optional, for interactivity) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+      <script>
+        if (localStorage.getItem('theme') === 'dark') {
+          document.body.classList.add('dark-mode');
+          document.getElementById('themeSwitch').checked = true;
+          document.getElementById('themeSwitchLabel').textContent = 'Jasny motyw';
+        }
+        document.getElementById('themeSwitch').addEventListener('change', function() {
+          if (this.checked) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+            document.getElementById('themeSwitchLabel').textContent = 'Jasny motyw';
+          } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+            document.getElementById('themeSwitchLabel').textContent = 'Ciemny motyw';
+          }
+        });
+      </script>
+    {% endblock %}
 </body>
 </html> 
