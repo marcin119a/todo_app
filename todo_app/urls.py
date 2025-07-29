@@ -18,8 +18,10 @@ from django.contrib import admin
 from django.urls import path
 from todo.urls import urlpatterns as todo_urls
 from django.urls import include
+from user.urls import urlpatterns as user_urls
 
 urlpatterns = [
         path('admin/', admin.site.urls),
         path('', include(todo_urls)),
+        path('user/', include(user_urls)),
 ]

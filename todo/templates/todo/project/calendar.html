@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block extra_head %}
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+  <h2>Kalendarz zadań</h2>
+  <div id="calendar"></div>
+{% endblock %}
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var calendarEl = document.getElementById('calendar');
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth', // lub 'timeGridWeek'
+        locale: 'pl',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek'
+        },
+        events: [
+          {% for task in tasks %}
+            {
+              title: "{{ task.title|escapejs }}",
+              start: "{{ task.due_date|date:'Y-m-d' }}",
+              allDay: true,
+              color: "{% if task.completed %}green{% else %}red{% endif %}"
+            }{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ]
+      });
+      calendar.render();
+    });
+  </script>
+{% endblock %}

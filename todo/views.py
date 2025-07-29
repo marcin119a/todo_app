@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Task, Project, Tag
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from .forms import UserRegistrationForm, UserLoginForm, ProjectForm
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
+from django.shortcuts import render
 
 # Task list
 @login_required
@@ -40,14 +40,16 @@ def task_list(request):
 @login_required
 def add_task(request):
     projects = Project.objects.filter(user=request.user)
+    today = timezone.now().date()
     if request.method == 'POST':
         title = request.POST.get('title')
         project_id = request.POST.get('project')
+        due_date = request.POST.get('due_date')
         if title:
-            Task.objects.create(title=title, user=request.user, project_id=project_id)
+            Task.objects.create(title=title, user=request.user, project_id=project_id, due_date=due_date)
             messages.success(request, 'Zadanie zostało dodane!')
         return redirect('task_list')
-    return render(request, 'todo/task/add_task.html', {'projects': projects})
+    return render(request, 'todo/task/add_task.html', {'projects': projects, 'today': today})
 
 # Complete task
 @login_required
@@ -75,65 +77,10 @@ def add_project(request):
             return redirect('task_list')
     else:
         form = ProjectForm()
-    return render(request, 'todo/user/add_project.html', {'form': form})
-
-
-def register(request):
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-            login(request, user)
-            return redirect('task_list')
-    else:
-        form = UserRegistrationForm()
-    return render(request, 'todo/user/register.html', {'form': form})
-
-
-def login_view(request):
-    if request.method == 'POST':
-        form = UserLoginForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            password = form.cleaned_data['password']
-            from django.contrib.auth.models import User
-            try:
-                user = User.objects.get(email=email)
-                user = authenticate(request, username=user.username, password=password)
-            except User.DoesNotExist:
-                user = None
-            if user is not None:
-                login(request, user)
-                return redirect('task_list')
-            else:
-                messages.error(request, 'Nieprawidłowy e-mail lub hasło.')
-    else:
-        form = UserLoginForm()
-    return render(request, 'todo/user/login.html', {'form': form})
-
-
-def logout_view(request):
-    logout(request)
-    from django.shortcuts import redirect
-    return redirect('login')
+    return render(request, 'todo/project/add_project.html', {'form': form})
 
 
 @login_required
-def account_summary(request):
-    projects = Project.objects.filter(user=request.user)
+def calendar_view(request):
     tasks = Task.objects.filter(user=request.user)
-    now = timezone.now().date()
-
-    completed = tasks.filter(completed=True).count()
-    overdue = tasks.filter(completed=False, due_date__lt=now).count()
-    upcoming = tasks.filter(completed=False, due_date__gte=now, due_date__lte=now + timedelta(days=3)).count()
-
-    return render(request, 'todo/user/account_summary.html', {
-        'projects': projects,
-        'completed': completed,
-        'overdue': overdue,
-        'upcoming': upcoming,
-        'total': tasks.count(),
-    })
+    return render(request, 'todo/project/calendar.html', {'tasks': tasks})

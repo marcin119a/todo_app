@@ -48,6 +48,11 @@
         {% else %}
           <a href="{% url 'task_detail' task.id %}" class="text-decoration-none">{{ task.title }}</a>
         {% endif %}
+        <span class="badge bg-secondary ms-2">{{ task.due_date|date:'Y-m-d' }}</span>
+        <span class="badge bg-info text-dark ms-1">Priorytet: {{ task.priority }}</span>
+        {% if task.project %}
+          <span class="badge bg-primary ms-1">{{ task.project.name }}</span>
+        {% endif %}
       </span>
       {% if not task.completed %}
         <a class="btn btn-success btn-sm" href="{% url 'complete_task' task.id %}">Wykonane</a>
