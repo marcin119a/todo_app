@@ -61,3 +61,32 @@ def test_password_change(client):
     assert response.status_code == 200
     assert 'Twoje zadania' in response.content.decode() 
 
+
+@pytest.mark.django_db
+def test_account_summary_view(client):
+    User = get_user_model()
+    user = User.objects.create_user(username='testuser', email='test@example.com', password='testpass123')
+    client.login(username='testuser', password='testpass123')
+
+    # Create projects and tasks
+    project1 = Project.objects.create(name='Projekt 1', user=user)
+    project2 = Project.objects.create(name='Projekt 2', user=user)
+    today = timezone.now().date()
+    Task.objects.create(title='Zadanie ukończone', user=user, completed=True, due_date=today)
+    Task.objects.create(title='Zadanie zaległe', user=user, completed=False, due_date=today - timedelta(days=2))
+    Task.objects.create(title='Zadanie zbliżające się', user=user, completed=False, due_date=today + timedelta(days=2))
+    Task.objects.create(title='Zadanie inne', user=user, completed=False, due_date=today + timedelta(days=10))
+
+    url = reverse('account_summary')
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    # Check projects
+    assert 'Projekt 1' in content
+    assert 'Projekt 2' in content
+    # Check statistics
+    assert 'Wszystkie zadania: 4' in content
+    assert 'Ukończone: 1' in content
+    assert 'Zaległe: 1' in content
+    assert 'Zbliżające się (3 dni): 1' in content 
+
