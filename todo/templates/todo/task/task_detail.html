@@ -19,6 +19,129 @@
         </tr>
       </tbody>
     </table>
+    <h3>Komentarze</h3>
+    <ul id="comments-list">
+      {% for comment in comments %}
+        <li data-comment-id="{{ comment.id }}">
+          <b>{{ comment.author }}</b> ({{ comment.created_at|date:'Y-m-d H:i' }}): 
+          <span class="comment-content">{{ comment.content }}</span>
+          {% if comment.user == request.user %}
+            <button class="btn btn-sm btn-link edit-comment-btn">Edytuj</button>
+            <button class="btn btn-sm btn-link text-danger delete-comment-btn">Usuń</button>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li>Brak komentarzy.</li>
+      {% endfor %}
+    </ul>
+    <form id="comment-form" class="mt-3">
+      <div class="mb-3">
+        <label for="comment-content" class="form-label">Dodaj komentarz:</label>
+        <textarea class="form-control" id="comment-content" rows="2" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Wyślij</button>
+    </form>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Dodawanie komentarza
+        document.getElementById('comment-form').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const content = document.getElementById('comment-content').value;
+          const response = await fetch('/comments/api/add/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+              task: {{ task.id }},
+              content: content
+            })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const list = document.getElementById('comments-list');
+            const li = document.createElement('li');
+            li.setAttribute('data-comment-id', data.id);
+            li.innerHTML = `<b>${data.author}</b> (${data.created_at ? data.created_at.slice(0,16).replace('T',' ') : ''}): <span class='comment-content'>${data.content}</span>`;
+            {% if request.user.is_authenticated %}
+            if (data.user === {{ request.user.id }}) {
+              li.innerHTML += ' <button class="btn btn-sm btn-link edit-comment-btn">Edytuj</button>';
+            }
+            {% endif %}
+            list.appendChild(li);
+            document.getElementById('comment-content').value = '';
+          } else {
+            alert('Błąd podczas dodawania komentarza.');
+          }
+        });
+
+        // Edycja komentarza (delegacja zdarzeń)
+        document.getElementById('comments-list').addEventListener('click', function(e) {
+          if (e.target.classList.contains('edit-comment-btn')) {
+            const li = e.target.closest('li');
+            const commentId = li.getAttribute('data-comment-id');
+            const contentSpan = li.querySelector('.comment-content');
+            const oldContent = contentSpan.textContent;
+            // Tworzymy pole do edycji
+            const textarea = document.createElement('textarea');
+            textarea.className = 'form-control';
+            textarea.value = oldContent;
+            contentSpan.replaceWith(textarea);
+            e.target.style.display = 'none';
+            // Dodaj przycisk zapisz
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Zapisz';
+            saveBtn.className = 'btn btn-sm btn-success ms-2 save-comment-btn';
+            li.appendChild(saveBtn);
+            saveBtn.addEventListener('click', async function() {
+              const newContent = textarea.value;
+              const response = await fetch(`/comments/api/edit/${commentId}/`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ content: newContent })
+              });
+              if (response.ok) {
+                const data = await response.json();
+                const newSpan = document.createElement('span');
+                newSpan.className = 'comment-content';
+                newSpan.textContent = data.content;
+                textarea.replaceWith(newSpan);
+                saveBtn.remove();
+                e.target.style.display = '';
+              } else {
+                alert('Błąd podczas edycji komentarza.');
+              }
+            });
+          }
+        });
+
+        // Usuwanie komentarza (delegacja zdarzeń)
+        document.getElementById('comments-list').addEventListener('click', function(e) {
+          if (e.target.classList.contains('delete-comment-btn')) {
+            const li = e.target.closest('li');
+            const commentId = li.getAttribute('data-comment-id');
+            if (confirm('Czy na pewno chcesz usunąć ten komentarz?')) {
+              fetch(`/comments/api/delete/${commentId}/`, {
+                method: 'DELETE',
+                headers: {
+                  'X-CSRFToken': '{{ csrf_token }}'
+                }
+              }).then(response => {
+                if (response.ok) {
+                  li.remove();
+                } else {
+                  alert('Błąd podczas usuwania komentarza.');
+                }
+              });
+            }
+          }
+        });
+      });
+    </script>
     <a href="{% url 'task_list' %}" class="btn btn-secondary">Powrót do listy zadań</a>
   </div>
 {% endblock %} 

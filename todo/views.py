@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
 from django.shortcuts import render
+from comments.models import Comment
 
 # Task list
 @login_required
@@ -63,7 +64,8 @@ def complete_task(request, task_id):
 @login_required
 def task_detail(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    return render(request, 'todo/task/task_detail.html', {'task': task})
+    comments = Comment.objects.filter(task=task).order_by('created_at')
+    return render(request, 'todo/task/task_detail.html', {'task': task, 'comments': comments})
 
 
 @login_required
