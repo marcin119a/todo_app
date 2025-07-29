@@ -19,9 +19,15 @@ from django.urls import path
 from todo.urls import urlpatterns as todo_urls
 from django.urls import include
 from user.urls import urlpatterns as user_urls
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
         path('admin/', admin.site.urls),
         path('', include(todo_urls)),
         path('user/', include(user_urls)),
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
