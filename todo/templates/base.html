@@ -14,7 +14,8 @@
             <a class="navbar-brand" href="#">Todo App</a>
             <div class="d-flex ms-auto">
                 {% if user.is_authenticated %}
-                    <form method="post" action="{% url 'logout' %}">
+                    <a class="btn btn-link me-2" href="{% url 'password_change' %}">Zmiana hasła</a>
+                    <form method="post" action="{% url 'logout' %}" class="d-inline">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-danger">Wyloguj</button>
                     </form>
