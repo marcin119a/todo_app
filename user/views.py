@@ -7,6 +7,11 @@ from todo.forms import UserRegistrationForm, UserLoginForm
 from todo.models import Project, Task
 from django.utils import timezone
 from datetime import timedelta
+from .forms import UserEditForm, ProfileEditForm
+from django.db.models.signals import post_save
+from django.contrib.auth.models import User
+from django.dispatch import receiver
+from .models import Profile
 
 
 def register(request):
@@ -66,3 +71,26 @@ def account_summary(request):
         'upcoming': upcoming,
         'total': tasks.count(),
     })
+
+
+@login_required
+def edit_account(request):
+    if request.method == 'POST':
+        user_form = UserEditForm(request.POST, instance=request.user)
+        profile_form = ProfileEditForm(request.POST, request.FILES, instance=request.user.profile)
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Dane konta zostały zaktualizowane!')
+            return redirect('edit_account')
+    else:
+        user_form = UserEditForm(instance=request.user)
+        profile_form = ProfileEditForm(instance=request.user.profile)
+    return render(request, 'user/user/edit_account.html', {
+        'user_form': user_form,
+        'profile_form': profile_form
+    })
+
+
+
+

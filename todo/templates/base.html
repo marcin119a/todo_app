@@ -37,6 +37,8 @@
             <a class="navbar-brand" href="#">Todo App</a>
             <div class="d-flex ms-auto">
                 {% if user.is_authenticated %}
+                    <a class="btn btn-link me-2" href="{% url 'edit_account' %}">Edycja profilu</a>
+                    <a class="btn btn-link me-2" href="{% url 'account_summary' %}">Statystyki</a>
                     <a class="btn btn-link me-2" href="{% url 'calendar' %}">Kalendarz</a>
                     <a class="btn btn-link me-2" href="{% url 'password_change' %}">Zmiana hasła</a>
                     <form method="post" action="{% url 'logout' %}" class="d-inline">

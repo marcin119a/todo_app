@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 class="mb-4">Edycja profilu</h2>
+  <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    {% csrf_token %}
+    {{ user_form.non_field_errors }}
+    <div class="mb-3">
+      <label for="id_first_name" class="form-label">Imię</label>
+      {{ user_form.first_name }}
+      {% for error in user_form.first_name.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-3">
+      <label for="id_email" class="form-label">E-mail</label>
+      {{ user_form.email }}
+      {% for error in user_form.email.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-3">
+      <label for="id_avatar" class="form-label">Awatar</label><br>
+      {% if profile_form.instance.avatar %}
+        <img src="{{ profile_form.instance.avatar.url }}" alt="Awatar" class="mb-2" style="max-width:100px; max-height:100px; display:block;">
+      {% endif %}
+      {{ profile_form.avatar }}
+      {% for error in profile_form.avatar.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+  </form>
+{% endblock %} 

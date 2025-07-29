@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from user.views import login_view, logout_view, register, account_summary
+from user.views import login_view, logout_view, register, account_summary, edit_account
 
 urlpatterns = []
 
@@ -14,6 +14,7 @@ urlpatterns += [
     path('login/', login_view, name='login'),
     path('register/', register, name='register'),
     path('account_summary/', account_summary, name='account_summary'),
+    path('edit/', edit_account, name='edit_account'),
 ]
 
 urlpatterns += [

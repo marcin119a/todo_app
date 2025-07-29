@@ -12,12 +12,12 @@ from django.urls import reverse
 def test_login_and_task_list(client):
     User = get_user_model()
     # Create user and task
-    user = User.objects.create_user(username='testuser', email='test@example.com', password='testpass123')
-    task = Task.objects.create(title='Moje zadanie', user=user)
+    user, _ = User.objects.get_or_create(username='testuser2', email='test_2@example.com', password='testpass123@')
+    task = Task.objects.get_or_create(title='Moje zadanie', user=user)
 
     # Login
     login_url = reverse('login')
-    response = client.post(login_url, {'email': 'test@example.com', 'password': 'testpass123'}, follow=True)
+    response = client.post(login_url, {'email': 'test_2@example.com', 'password': 'testpass123'}, follow=True)
     assert response.status_code == 200
     # After login, redirect to task list
     assert 'Twoje zadania' in response.content.decode()
@@ -28,7 +28,7 @@ def test_login_and_task_list(client):
 def test_password_reset_email(client):
     User = get_user_model()
     # Create user
-    user = User.objects.create_user(username='testuser', email='test@example.com', password='testpass123')
+    user, _ = User.objects.get_or_create(username='testuser', email='test@example.com', password='testpass123')
 
     reset_url = reverse('password_reset')
     response = client.post(reset_url, {'email': 'test@example.com'}, follow=True)
@@ -44,8 +44,9 @@ def test_password_reset_email(client):
 @pytest.mark.django_db
 def test_password_change(client):
     User = get_user_model()
-    user = User.objects.create_user(username='testuser', email='test@example.com', password='oldpass123')
-    client.login(username='testuser', password='oldpass123')
+    User.objects.filter(username='test21321').delete()
+    user = User.objects.create(username='test21321', email='test21321@example.com', password='oldpass123')
+    client.login(username='test21321', password='oldpass123')
     url = reverse('password_change')
     response = client.post(url, {
         'old_password': 'oldpass123',
@@ -54,10 +55,11 @@ def test_password_change(client):
     }, follow=True)
     assert response.status_code == 200
     assert 'Hasło zostało zmienione' in response.content.decode()
+    print(response.content.decode())
     # Wylogowanie i próba logowania nowym hasłem
     client.logout()
     login_url = reverse('login')
-    response = client.post(login_url, {'email': 'test@example.com', 'password': 'newpass456!'}, follow=True)
+    response = client.post(login_url, {'email': 'user_test_password_change_2@example.com', 'password': 'newpass456!'}, follow=True)
     assert response.status_code == 200
     assert 'Twoje zadania' in response.content.decode() 
 
@@ -65,9 +67,8 @@ def test_password_change(client):
 @pytest.mark.django_db
 def test_account_summary_view(client):
     User = get_user_model()
-    user = User.objects.create_user(username='testuser', email='test@example.com', password='testpass123')
-    client.login(username='testuser', password='testpass123')
-
+    user, _ = User.objects.get_or_create(username='testuser', email='test@example.com', password='testpass123')
+    client.force_login(user)
     # Create projects and tasks
     project1 = Project.objects.create(name='Projekt 1', user=user)
     project2 = Project.objects.create(name='Projekt 2', user=user)
