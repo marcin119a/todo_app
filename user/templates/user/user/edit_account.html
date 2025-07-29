@@ -20,16 +20,65 @@
     </div>
     <div class="mb-3">
       <label for="id_avatar" class="form-label">Awatar</label><br>
-      {% if profile_form.instance.avatar and profile_form.instance.avatar.url %}
-      <img src="{{ profile_form.instance.avatar.url }}" alt="Awatar" class="mb-2" style="max-width:100px; max-height:100px; display:block;">
-      {% else %}
-        <img src="/static/img/default_avatar.png" alt="Brak awatara" class="mb-2" style="max-width:100px; max-height:100px; display:block;">
-      {% endif %}
+      <div>
+        <img id="avatar-preview" src="{% if profile_form.instance.avatar and profile_form.instance.avatar.url %}{{ profile_form.instance.avatar.url }}{% else %}/static/img/default_avatar.png{% endif %}" alt="Awatar" style="max-width:200px; max-height:200px; display:block; margin-bottom:10px;">
+      </div>
       {{ profile_form.avatar }}
+      <input type="hidden" name="cropped_avatar" id="cropped-avatar">
       {% for error in profile_form.avatar.errors %}
         <div class="invalid-feedback d-block">{{ error }}</div>
       {% endfor %}
     </div>
     <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
   </form>
-{% endblock %} 
+{% endblock %}
+
+<!-- Cropper.js CSS -->
+<link  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<!-- Cropper.js JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var input = document.getElementById('id_avatar');
+  var preview = document.getElementById('avatar-preview');
+  var cropper;
+  input.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (file) {
+      var reader = new FileReader();
+      reader.onload = function(event) {
+        preview.src = event.target.result;
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(preview, {
+          aspectRatio: 1,
+          viewMode: 1,
+          autoCropArea: 1,
+          crop(event) {
+            // Nic tu nie trzeba, cropper sam trzyma stan
+          }
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Przed wysłaniem formularza - zamień crop na base64
+  var form = input.closest('form');
+  form.addEventListener('submit', function(e) {
+    if (cropper) {
+      e.preventDefault();
+      cropper.getCroppedCanvas({
+        width: 200,
+        height: 200,
+        imageSmoothingQuality: 'high'
+      }).toBlob(function(blob) {
+        var newFile = new File([blob], 'avatar.png', {type: 'image/png'});
+        var dataTransfer = new DataTransfer();
+        dataTransfer.items.add(newFile);
+        input.files = dataTransfer.files;
+        form.submit();
+      }, 'image/png');
+    }
+  });
+});
+</script> 

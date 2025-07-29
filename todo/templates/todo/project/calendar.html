@@ -20,14 +20,13 @@
           right: 'dayGridMonth,timeGridWeek'
         },
         events: [
-          {% for task in tasks %}
-            {
-              title: "{{ task.title|escapejs }}",
-              start: "{{ task.due_date|date:'Y-m-d' }}",
-              allDay: true,
-              color: "{% if task.completed %}green{% else %}red{% endif %}"
-            }{% if not forloop.last %},{% endif %}
-          {% endfor %}
+          {% for task in tasks %}{
+            title: "{{ task.title|escapejs }}",
+            start: "{{ task.due_date|date:'Y-m-d' }}",
+            allDay: true,
+            color: "{% if task.completed %}green{% else %}red{% endif %}",
+            url: "{% url 'task_detail' task.id %}"
+          }{% if not forloop.last %},{% endif %}{% endfor %}
         ]
       });
       calendar.render();
