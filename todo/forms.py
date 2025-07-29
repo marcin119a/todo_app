@@ -38,13 +38,3 @@ class UserRegistrationForm(BootstrapFormMixin, forms.ModelForm):
 class UserLoginForm(BootstrapFormMixin, forms.Form):
     email = forms.EmailField(label='E-mail', widget=forms.EmailInput())
     password = forms.CharField(label='Hasło', widget=forms.PasswordInput())
-
-class ProjectForm(BootstrapFormMixin, forms.ModelForm):
-    class Meta:
-        model = User._meta.get_field('projects').related_model
-        fields = ['name', 'description']
-        widgets = {
-            'name': forms.TextInput(),
-            'description': forms.Textarea({'rows': 3}),
-        }
-

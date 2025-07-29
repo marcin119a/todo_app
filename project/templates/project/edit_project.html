@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 class="mb-4">Edytuj projekt: {{ project.name }}</h2>
+  <form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="mb-3">
+        <label for="id_{{ field.name }}" class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+          <div class="form-text">{{ field.help_text }}</div>
+        {% endif %}
+        {% for error in field.errors %}
+          <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+  </form>
+
+  <script>
+    // Prosty JS do filtrowania użytkowników na liście członków
+    document.addEventListener('DOMContentLoaded', function() {
+      var membersSelect = document.getElementById('id_members');
+      if (membersSelect) {
+        var searchBox = document.createElement('input');
+        searchBox.type = 'text';
+        searchBox.placeholder = 'Szukaj użytkownika...';
+        searchBox.className = 'form-control mb-2';
+        membersSelect.parentNode.insertBefore(searchBox, membersSelect);
+
+        searchBox.addEventListener('keyup', function() {
+          var filter = searchBox.value.toLowerCase();
+          for (var i = 0; i < membersSelect.options.length; i++) {
+            var option = membersSelect.options[i];
+            var text = option.text.toLowerCase();
+            option.style.display = text.includes(filter) ? '' : 'none';
+          }
+        });
+      }
+    });
+  </script>
+{% endblock %} 

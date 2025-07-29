@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Task, Project, Tag
+from .models import Task, Tag
+from project.models import Project
 from django.contrib.auth import login, logout
-from .forms import UserRegistrationForm, UserLoginForm, ProjectForm
+from .forms import UserRegistrationForm, UserLoginForm
+from project.forms import ProjectForm
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -68,20 +70,6 @@ def task_detail(request, task_id):
     return render(request, 'todo/task/task_detail.html', {'task': task, 'comments': comments})
 
 
-@login_required
-def add_project(request):
-    if request.method == 'POST':
-        form = ProjectForm(request.POST)
-        if form.is_valid():
-            project = form.save(commit=False)
-            project.user = request.user
-            project.save()
-            messages.success(request, 'Projekt został dodany!')
-            return redirect('task_list')
-    else:
-        form = ProjectForm()
-    return render(request, 'todo/project/add_project.html', {'form': form})
-
 
 @login_required
 def edit_project(request, project_id):
@@ -89,15 +77,17 @@ def edit_project(request, project_id):
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
-            form.save()
+            project = form.save()
+            # Zaktualizuj członków projektu
+            project.members.set(form.cleaned_data['members'])
             messages.success(request, 'Projekt został zaktualizowany!')
             return redirect('task_list')
     else:
         form = ProjectForm(instance=project)
-    return render(request, 'todo/project/edit_project.html', {'form': form, 'project': project})
+    return render(request, 'project/edit_project.html', {'form': form, 'project': project})
 
 
 @login_required
 def calendar_view(request):
     tasks = Task.objects.filter(user=request.user)
-    return render(request, 'todo/project/calendar.html', {'tasks': tasks})
+    return render(request, 'project/calendar.html', {'tasks': tasks})

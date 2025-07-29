@@ -27,6 +27,7 @@ urlpatterns = [
         path('', include(todo_urls)),
         path('user/', include(user_urls)),
         path('comments/', include('comments.urls')),
+        path('project/', include('project.urls')),
 ]
 
 

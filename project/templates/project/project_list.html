@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 class="mb-4">Twoje projekty</h2>
+  <a href="{% url 'add_project' %}" class="btn btn-primary mb-3">Dodaj projekt</a>
+  <ul class="list-group">
+    {% for project in projects %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>{{ project.name }}</span>
+        <span>
+          <a href="{% url 'edit_project' project.id %}" class="btn btn-sm btn-outline-secondary">Edytuj</a>
+        </span>
+      </li>
+    {% empty %}
+      <li class="list-group-item">Brak projektów.</li>
+    {% endfor %}
+  </ul>
+{% endblock %} 
