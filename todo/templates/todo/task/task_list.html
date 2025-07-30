@@ -54,11 +54,14 @@
           <span class="badge bg-primary ms-1">{{ task.project.name }}</span>
         {% endif %}
       </span>
-      <form method="post" action="{% url 'complete_task' task.id %}" style="display:inline;">
-        {% csrf_token %}
-        <input type="checkbox" name="completed" id="completed_{{ task.id }}" {% if task.completed %}checked{% endif %} onchange="this.form.submit()">
-        <label for="completed_{{ task.id }}">Wykonane</label>
-      </form>
+      <span class="d-flex align-items-center">
+        <form method="post" action="{% url 'complete_task' task.id %}" style="display:inline; margin-right: 10px;">
+          {% csrf_token %}
+          <input type="checkbox" name="completed" id="completed_{{ task.id }}" {% if task.completed %}checked{% endif %} onchange="this.form.submit()">
+          <label for="completed_{{ task.id }}">Wykonane</label>
+        </form>
+        <a href="{% url 'delete_task' task.id %}" class="btn btn-sm btn-danger ms-2">Usuń</a>
+      </span>
     </li>
   {% empty %}
     <li class="list-group-item">Brak zadań.</li>

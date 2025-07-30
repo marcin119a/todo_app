@@ -11,7 +11,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.shortcuts import render
 from comments.models import Comment
-from django.views.generic import UpdateView
+from django.views.generic import UpdateView, DeleteView
 from django.urls import reverse_lazy
 
 # Task list
@@ -89,5 +89,14 @@ class ProjectUpdateView(UpdateView):
         self.object.members.set(form.cleaned_data['members'])
         messages.success(self.request, 'Projekt został zaktualizowany!')
         return response
+
+
+class TaskDeleteView(DeleteView):
+    model = Task
+    template_name = 'todo/task/task_confirm_delete.html'
+    success_url = reverse_lazy('task_list')
+
+    def get_queryset(self):
+        return Task.objects.filter(user=self.request.user)
 
 
