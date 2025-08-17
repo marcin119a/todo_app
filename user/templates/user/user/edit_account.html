@@ -1,75 +1,253 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2 class="mb-4">Edycja profilu</h2>
-  <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-    {% csrf_token %}
-    {{ user_form.non_field_errors }}
-    <div class="mb-3">
-      <label for="id_first_name" class="form-label">Imię</label>
-      {{ user_form.first_name }}
-      {% for error in user_form.first_name.errors %}
-        <div class="invalid-feedback d-block">{{ error }}</div>
-      {% endfor %}
-    </div>
-    <div class="mb-3">
-      <label for="id_email" class="form-label">E-mail</label>
-      {{ user_form.email }}
-      {% for error in user_form.email.errors %}
-        <div class="invalid-feedback d-block">{{ error }}</div>
-      {% endfor %}
-    </div>
-    <div class="mb-3">
-      <label for="id_avatar" class="form-label">Awatar</label><br>
-      <div>
-        <img id="avatar-preview" src="{% if profile_form.instance.avatar and profile_form.instance.avatar.url %}{{ profile_form.instance.avatar.url }}{% else %}/static/img/default_avatar.png{% endif %}" alt="Awatar" style="max-width:200px; max-height:200px; display:block; margin-bottom:10px;">
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white text-center py-4">
+          <h2 class="mb-0">
+            <i class="fas fa-user-edit me-2"></i>
+            Edycja profilu
+          </h2>
+        </div>
+        <div class="card-body p-5">
+          <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+            {{ user_form.non_field_errors }}
+            
+            <!-- Avatar Section -->
+            <div class="text-center mb-4">
+              <div class="position-relative d-inline-block">
+                <img id="avatar-preview" 
+                     src="{% if profile_form.instance.avatar and profile_form.instance.avatar.url %}{{ profile_form.instance.avatar.url }}{% else %}/static/img/default_avatar.png{% endif %}" 
+                     alt="Awatar" 
+                     class="rounded-circle shadow-sm border border-3 border-primary"
+                     style="width: 150px; height: 150px; object-fit: cover;">
+                <div class="position-absolute bottom-0 end-0">
+                  <label for="id_avatar" class="btn btn-sm btn-primary rounded-circle shadow-sm" style="width: 40px; height: 40px; line-height: 1;">
+                    <i class="fas fa-camera"></i>
+                  </label>
+                </div>
+              </div>
+              <div class="mt-3">
+                {{ profile_form.avatar }}
+                <input type="hidden" name="cropped_avatar" id="cropped-avatar">
+                {% for error in profile_form.avatar.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+                <small class="text-muted">Kliknij ikonę aparatu, aby zmienić awatar</small>
+              </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="id_first_name" class="form-label fw-bold">
+                  <i class="fas fa-user me-2 text-primary"></i>Imię
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-user text-muted"></i>
+                  </span>
+                  {{ user_form.first_name }}
+                </div>
+                {% for error in user_form.first_name.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="id_email" class="form-label fw-bold">
+                  <i class="fas fa-envelope me-2 text-primary"></i>E-mail
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-envelope text-muted"></i>
+                  </span>
+                  {{ user_form.email }}
+                </div>
+                {% for error in user_form.email.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-primary btn-lg px-5 py-3 shadow-sm">
+                <i class="fas fa-save me-2"></i>
+                Zapisz zmiany
+              </button>
+              <a href="{% url 'account_summary' %}" class="btn btn-outline-secondary btn-lg px-5 py-3 ms-3 shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i>
+                Powrót
+              </a>
+            </div>
+          </form>
+        </div>
       </div>
-      {{ profile_form.avatar }}
-      <input type="hidden" name="cropped_avatar" id="cropped-avatar">
-      {% for error in profile_form.avatar.errors %}
-        <div class="invalid-feedback d-block">{{ error }}</div>
-      {% endfor %}
     </div>
-    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
-  </form>
-{% endblock %}
+  </div>
+</div>
+
+<!-- Cropper Modal -->
+<div class="modal fade" id="cropperModal" tabindex="-1" aria-labelledby="cropperModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cropperModalLabel">
+          <i class="fas fa-crop-alt me-2"></i>
+          Przycinanie awatara
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="cropper-container" style="max-height: 400px;">
+          <img id="cropper-image" src="" alt="Przycinanie" style="max-width: 100%; max-height: 100%;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>
+          Anuluj
+        </button>
+        <button type="button" class="btn btn-primary" id="crop-button">
+          <i class="fas fa-check me-2"></i>
+          Przycinaj
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Cropper.js CSS -->
-<link  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <!-- Cropper.js JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<style>
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.input-group-text {
+  border-color: #dee2e6;
+}
+
+.card {
+  border-radius: 15px;
+}
+
+.card-header {
+  border-radius: 15px 15px 0 0 !important;
+}
+
+.btn {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#avatar-preview {
+  transition: all 0.3s ease;
+}
+
+#avatar-preview:hover {
+  transform: scale(1.05);
+}
+
+.cropper-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 10px;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   var input = document.getElementById('id_avatar');
   var preview = document.getElementById('avatar-preview');
+  var cropperImage = document.getElementById('cropper-image');
+  var cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
   var cropper;
+  
+  // Hide the original file input
+  input.style.display = 'none';
+  
+  // Handle file selection
   input.addEventListener('change', function(e) {
     var file = e.target.files[0];
     if (file) {
       var reader = new FileReader();
       reader.onload = function(event) {
-        preview.src = event.target.result;
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(preview, {
-          aspectRatio: 1,
-          viewMode: 1,
-          autoCropArea: 1,
-          crop(event) {
-            // Nic tu nie trzeba, cropper sam trzyma stan
-          }
-        });
+        cropperImage.src = event.target.result;
+        cropperModal.show();
+        
+        // Initialize cropper after modal is shown
+        setTimeout(function() {
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(cropperImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+            autoCropArea: 1,
+            background: false,
+            responsive: true,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false
+          });
+        }, 300);
       };
       reader.readAsDataURL(file);
     }
   });
 
-  // Przed wysłaniem formularza - zamień crop na base64
+  // Handle crop button
+  document.getElementById('crop-button').addEventListener('click', function() {
+    if (cropper) {
+      cropper.getCroppedCanvas({
+        width: 300,
+        height: 300,
+        imageSmoothingQuality: 'high'
+      }).toBlob(function(blob) {
+        preview.src = URL.createObjectURL(blob);
+        cropperModal.hide();
+        
+        // Update the file input
+        var newFile = new File([blob], 'avatar.png', {type: 'image/png'});
+        var dataTransfer = new DataTransfer();
+        dataTransfer.items.add(newFile);
+        input.files = dataTransfer.files;
+      }, 'image/png');
+    }
+  });
+
+  // Handle form submission
   var form = input.closest('form');
   form.addEventListener('submit', function(e) {
-    if (cropper) {
+    // Add loading state to button
+    var submitBtn = form.querySelector('button[type="submit"]');
+    var originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Zapisywanie...';
+    submitBtn.disabled = true;
+    
+    // If there's a cropped image, process it
+    if (cropper && input.files.length > 0) {
       e.preventDefault();
       cropper.getCroppedCanvas({
-        width: 200,
-        height: 200,
+        width: 300,
+        height: 300,
         imageSmoothingQuality: 'high'
       }).toBlob(function(blob) {
         var newFile = new File([blob], 'avatar.png', {type: 'image/png'});
@@ -81,4 +259,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
-</script> 
+</script>
+{% endblock %} 
