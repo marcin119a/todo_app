@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.forms import PasswordChangeForm
+from .models import Task, Tag
 
 class BootstrapFormMixin:
     def __init__(self, *args, **kwargs):
@@ -38,3 +39,19 @@ class UserRegistrationForm(BootstrapFormMixin, forms.ModelForm):
 class UserLoginForm(BootstrapFormMixin, forms.Form):
     email = forms.EmailField(label='E-mail', widget=forms.EmailInput())
     password = forms.CharField(label='Hasło', widget=forms.PasswordInput())
+
+
+class TaskForm(BootstrapFormMixin, forms.ModelForm):
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tag.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label='Tagi'
+    )
+
+    class Meta:
+        model = Task
+        fields = ['title', 'project', 'due_date', 'priority', 'tags']
+        widgets = {
+            'due_date': forms.DateInput(attrs={'type': 'date'}),
+        }

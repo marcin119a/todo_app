@@ -1,147 +1,585 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="container mt-4">
-    <h2>Szczegóły zadania</h2>
-    <table class="table table-bordered table-striped mt-3">
-      <tbody>
-        <tr>
-          <th scope="row">Treść</th>
-          <td>{{ task.content }}</td>
-        </tr>
-        <tr>
-          <th scope="row">Priorytet</th>
-          <td>{{ task.priority }}</td>
-        </tr>
-        <tr>
-          <th scope="row">Termin</th>
-          <td>{{ task.due_date }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <h3>Komentarze</h3>
-    <ul id="comments-list">
-      {% for comment in comments %}
-        <li data-comment-id="{{ comment.id }}">
-          <b>{{ comment.author }}</b> ({{ comment.created_at|date:'Y-m-d H:i' }}): 
-          <span class="comment-content">{{ comment.content }}</span>
-          {% if comment.user == request.user %}
-            <button class="btn btn-sm btn-link edit-comment-btn">Edytuj</button>
-            <button class="btn btn-sm btn-link text-danger delete-comment-btn">Usuń</button>
-          {% endif %}
-        </li>
-      {% empty %}
-        <li>Brak komentarzy.</li>
-      {% endfor %}
-    </ul>
-    <form id="comment-form" class="mt-3">
-      <div class="mb-3">
-        <label for="comment-content" class="form-label">Dodaj komentarz:</label>
-        <textarea class="form-control" id="comment-content" rows="2" required></textarea>
+<div class="container py-5">
+  <div class="row">
+    <!-- Main Task Details -->
+    <div class="col-lg-8">
+      <div class="card shadow-lg border-0 mb-4">
+        <div class="card-header bg-primary text-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+              <i class="fas fa-tasks me-2"></i>
+              Szczegóły zadania
+            </h2>
+            <a href="{% url 'edit_task' task.id %}" class="btn btn-light btn-sm">
+              <i class="fas fa-edit me-1"></i>
+              Edytuj
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-4">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="task-info-item">
+                <div class="info-label">
+                  <i class="fas fa-heading text-primary me-2"></i>
+                  <strong>Tytuł</strong>
+                </div>
+                <div class="info-value">{{ task.title }}</div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="task-info-item">
+                <div class="info-label">
+                  <i class="fas fa-exclamation-triangle text-primary me-2"></i>
+                  <strong>Priorytet</strong>
+                </div>
+                <div class="info-value">
+                  <span class="badge bg-{% if task.priority == 1 %}success{% elif task.priority == 2 %}warning{% else %}danger{% endif %} fs-6">
+                    {% if task.priority == 1 %}Niski{% elif task.priority == 2 %}Średni{% else %}Wysoki{% endif %}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="task-info-item">
+                <div class="info-label">
+                  <i class="fas fa-calendar-alt text-primary me-2"></i>
+                  <strong>Termin</strong>
+                </div>
+                <div class="info-value">
+                  {% if task.due_date %}
+                    <span class="{% if task.due_date < today %}text-danger{% endif %}">
+                      {{ task.due_date|date:"d.m.Y" }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">Brak terminu</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="task-info-item">
+                <div class="info-label">
+                  <i class="fas fa-check-circle text-primary me-2"></i>
+                  <strong>Status</strong>
+                </div>
+                <div class="info-value">
+                  {% if task.completed %}
+                    <span class="badge bg-success fs-6">Zakończone</span>
+                  {% else %}
+                    <span class="badge bg-warning fs-6">W trakcie</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tags Section -->
+          <div class="task-info-item mt-4">
+            <div class="info-label">
+              <i class="fas fa-tags text-primary me-2"></i>
+              <strong>Tagi</strong>
+            </div>
+            <div class="info-value">
+              {% for tag in task.tags.all %}
+                <span class="tag-badge">{{ tag.name }}</span>
+              {% empty %}
+                <span class="text-muted">Brak tagów</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary">Wyślij</button>
-    </form>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Dodawanie komentarza
-        document.getElementById('comment-form').addEventListener('submit', async function(e) {
-          e.preventDefault();
-          const content = document.getElementById('comment-content').value;
-          const response = await fetch('/comments/api/add/', {
-            method: 'POST',
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card shadow-lg border-0 mb-4">
+        <div class="card-header bg-info text-white py-3">
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            Informacje
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="info-item mb-3">
+            <small class="text-muted">Utworzone</small>
+            <div>{{ task.updated_at|date:"d.m.Y H:i" }}</div>
+          </div>
+          {% if task.project %}
+          <div class="info-item mb-3">
+            <small class="text-muted">Projekt</small>
+            <div>{{ task.project.name }}</div>
+          </div>
+          {% endif %}
+          <div class="info-item">
+            <small class="text-muted">Komentarze</small>
+            <div class="fw-bold">{{ comments.count }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-secondary text-white py-3">
+          <h5 class="mb-0">
+            <i class="fas fa-bolt me-2"></i>
+            Szybkie akcje
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="{% url 'task_list' %}" class="btn btn-outline-primary">
+              <i class="fas fa-list me-2"></i>
+              Lista zadań
+            </a>
+            <a href="{% url 'add_task' %}" class="btn btn-outline-success">
+              <i class="fas fa-plus me-2"></i>
+              Nowe zadanie
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Comments Section -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-success text-white py-3">
+          <h3 class="mb-0">
+            <i class="fas fa-comments me-2"></i>
+            Komentarze
+          </h3>
+        </div>
+        <div class="card-body p-4">
+          <!-- Comments List -->
+          <div id="comments-list" class="mb-4">
+            {% for comment in comments %}
+              <div class="comment-item" data-comment-id="{{ comment.id }}">
+                <div class="comment-header">
+                  <div class="comment-author">
+                    <i class="fas fa-user-circle text-primary me-2"></i>
+                    <strong>{{ comment.author }}</strong>
+                  </div>
+                  <div class="comment-meta">
+                    <small class="text-muted">{{ comment.created_at|date:'d.m.Y H:i' }}</small>
+                    {% if comment.user == request.user %}
+                      <div class="comment-actions">
+                        <button class="btn btn-sm btn-link edit-comment-btn">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link text-danger delete-comment-btn">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="comment-content">
+                  <span class="comment-text">{{ comment.content }}</span>
+                </div>
+              </div>
+            {% empty %}
+              <div class="text-center text-muted py-4">
+                <i class="fas fa-comment-slash fa-3x mb-3"></i>
+                <p>Brak komentarzy. Bądź pierwszy!</p>
+              </div>
+            {% endfor %}
+          </div>
+          
+          <!-- Add Comment Form -->
+          <div class="comment-form-container">
+            <h5 class="mb-3">
+              <i class="fas fa-plus-circle me-2"></i>
+              Dodaj komentarz
+            </h5>
+            <form id="comment-form">
+              <div class="mb-3">
+                <textarea class="form-control" id="comment-content" rows="3" 
+                          placeholder="Napisz swój komentarz..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane me-2"></i>
+                Wyślij komentarz
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<style>
+.card {
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.card-header {
+  border-bottom: none;
+}
+
+.task-info-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 4px solid #0d6efd;
+}
+
+.info-label {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.tag-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  margin: 2px;
+}
+
+.info-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.comment-item {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-left: 4px solid #28a745;
+  transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.comment-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.comment-author {
+  font-size: 1.1rem;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.comment-content {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.comment-text {
+  color: #495057;
+}
+
+.comment-form-container {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  border: 2px dashed #dee2e6;
+}
+
+.btn {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.badge {
+  border-radius: 20px;
+  padding: 8px 16px;
+}
+
+/* Animation for new comments */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.comment-item.new-comment {
+  animation: slideIn 0.5s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .task-info-item {
+    margin-bottom: 15px;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add comment functionality
+  document.getElementById('comment-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const content = document.getElementById('comment-content').value;
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Wysyłanie...';
+    submitBtn.disabled = true;
+    
+    try {
+      const response = await fetch('/comments/api/add/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          task: {{ task.id }},
+          content: content
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const list = document.getElementById('comments-list');
+        
+        // Remove empty state if exists
+        const emptyState = list.querySelector('.text-center');
+        if (emptyState) {
+          emptyState.remove();
+        }
+        
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment-item new-comment';
+        commentDiv.setAttribute('data-comment-id', data.id);
+        
+                 // Create comment HTML
+         let commentActions = '';
+         if (data.user === {{ request.user.id|default:0 }}) {
+           commentActions = `
+             <div class="comment-actions">
+               <button class="btn btn-sm btn-link edit-comment-btn">
+                 <i class="fas fa-edit"></i>
+               </button>
+               <button class="btn btn-sm btn-link text-danger delete-comment-btn">
+                 <i class="fas fa-trash"></i>
+               </button>
+             </div>
+           `;
+         }
+         
+         commentDiv.innerHTML = `
+           <div class="comment-header">
+             <div class="comment-author">
+               <i class="fas fa-user-circle text-primary me-2"></i>
+               <strong>${data.author}</strong>
+             </div>
+             <div class="comment-meta">
+               <small class="text-muted">${data.created_at ? data.created_at.slice(0,16).replace('T',' ') : ''}</small>
+               ${commentActions}
+             </div>
+           </div>
+           <div class="comment-content">
+             <span class="comment-text">${data.content}</span>
+           </div>
+         `;
+        
+        list.appendChild(commentDiv);
+        document.getElementById('comment-content').value = '';
+        
+        // Scroll to new comment
+        commentDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Show success message
+        showMessage('Komentarz został dodany!', 'success');
+      } else {
+        throw new Error('Błąd podczas dodawania komentarza');
+      }
+    } catch (error) {
+      showMessage('Błąd: ' + error.message, 'error');
+    } finally {
+      // Restore button state
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Edit comment functionality
+  document.getElementById('comments-list').addEventListener('click', function(e) {
+    if (e.target.closest('.edit-comment-btn')) {
+      const commentItem = e.target.closest('.comment-item');
+      const commentId = commentItem.getAttribute('data-comment-id');
+      const contentSpan = commentItem.querySelector('.comment-text');
+      const oldContent = contentSpan.textContent;
+      
+      // Create edit form
+      const editForm = document.createElement('div');
+      editForm.className = 'edit-form mt-3';
+      editForm.innerHTML = `
+        <textarea class="form-control mb-2" rows="3">${oldContent}</textarea>
+        <div class="d-flex gap-2">
+          <button class="btn btn-success btn-sm save-comment-btn">
+            <i class="fas fa-check me-1"></i>Zapisz
+          </button>
+          <button class="btn btn-secondary btn-sm cancel-edit-btn">
+            <i class="fas fa-times me-1"></i>Anuluj
+          </button>
+        </div>
+      `;
+      
+      contentSpan.style.display = 'none';
+      commentItem.appendChild(editForm);
+      
+      const textarea = editForm.querySelector('textarea');
+      textarea.focus();
+      
+      // Save button handler
+      editForm.querySelector('.save-comment-btn').addEventListener('click', async function() {
+        const newContent = textarea.value.trim();
+        if (!newContent) return;
+        
+        try {
+          const response = await fetch(`/comments/api/edit/${commentId}/`, {
+            method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               'X-CSRFToken': '{{ csrf_token }}'
             },
-            body: JSON.stringify({
-              task: {{ task.id }},
-              content: content
-            })
+            body: JSON.stringify({ content: newContent })
           });
+          
           if (response.ok) {
             const data = await response.json();
-            const list = document.getElementById('comments-list');
-            const li = document.createElement('li');
-            li.setAttribute('data-comment-id', data.id);
-            li.innerHTML = `<b>${data.author}</b> (${data.created_at ? data.created_at.slice(0,16).replace('T',' ') : ''}): <span class='comment-content'>${data.content}</span>`;
-            {% if request.user.is_authenticated %}
-            if (data.user === {{ request.user.id }}) {
-              li.innerHTML += ' <button class="btn btn-sm btn-link edit-comment-btn">Edytuj</button>';
-            }
-            {% endif %}
-            list.appendChild(li);
-            document.getElementById('comment-content').value = '';
+            contentSpan.textContent = data.content;
+            contentSpan.style.display = '';
+            editForm.remove();
+            showMessage('Komentarz został zaktualizowany!', 'success');
           } else {
-            alert('Błąd podczas dodawania komentarza.');
+            throw new Error('Błąd podczas edycji komentarza');
           }
-        });
-
-        // Edycja komentarza (delegacja zdarzeń)
-        document.getElementById('comments-list').addEventListener('click', function(e) {
-          if (e.target.classList.contains('edit-comment-btn')) {
-            const li = e.target.closest('li');
-            const commentId = li.getAttribute('data-comment-id');
-            const contentSpan = li.querySelector('.comment-content');
-            const oldContent = contentSpan.textContent;
-            // Tworzymy pole do edycji
-            const textarea = document.createElement('textarea');
-            textarea.className = 'form-control';
-            textarea.value = oldContent;
-            contentSpan.replaceWith(textarea);
-            e.target.style.display = 'none';
-            // Dodaj przycisk zapisz
-            const saveBtn = document.createElement('button');
-            saveBtn.textContent = 'Zapisz';
-            saveBtn.className = 'btn btn-sm btn-success ms-2 save-comment-btn';
-            li.appendChild(saveBtn);
-            saveBtn.addEventListener('click', async function() {
-              const newContent = textarea.value;
-              const response = await fetch(`/comments/api/edit/${commentId}/`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ content: newContent })
-              });
-              if (response.ok) {
-                const data = await response.json();
-                const newSpan = document.createElement('span');
-                newSpan.className = 'comment-content';
-                newSpan.textContent = data.content;
-                textarea.replaceWith(newSpan);
-                saveBtn.remove();
-                e.target.style.display = '';
-              } else {
-                alert('Błąd podczas edycji komentarza.');
-              }
-            });
-          }
-        });
-
-        // Usuwanie komentarza (delegacja zdarzeń)
-        document.getElementById('comments-list').addEventListener('click', function(e) {
-          if (e.target.classList.contains('delete-comment-btn')) {
-            const li = e.target.closest('li');
-            const commentId = li.getAttribute('data-comment-id');
-            if (confirm('Czy na pewno chcesz usunąć ten komentarz?')) {
-              fetch(`/comments/api/delete/${commentId}/`, {
-                method: 'DELETE',
-                headers: {
-                  'X-CSRFToken': '{{ csrf_token }}'
-                }
-              }).then(response => {
-                if (response.ok) {
-                  li.remove();
-                } else {
-                  alert('Błąd podczas usuwania komentarza.');
-                }
-              });
-            }
-          }
-        });
+        } catch (error) {
+          showMessage('Błąd: ' + error.message, 'error');
+        }
       });
-    </script>
-    <a href="{% url 'task_list' %}" class="btn btn-secondary">Powrót do listy zadań</a>
-  </div>
+      
+      // Cancel button handler
+      editForm.querySelector('.cancel-edit-btn').addEventListener('click', function() {
+        contentSpan.style.display = '';
+        editForm.remove();
+      });
+    }
+  });
+
+  // Delete comment functionality
+  document.getElementById('comments-list').addEventListener('click', function(e) {
+    if (e.target.closest('.delete-comment-btn')) {
+      const commentItem = e.target.closest('.comment-item');
+      const commentId = commentItem.getAttribute('data-comment-id');
+      
+      if (confirm('Czy na pewno chcesz usunąć ten komentarz?')) {
+        fetch(`/comments/api/delete/${commentId}/`, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+          }
+        }).then(response => {
+          if (response.ok) {
+            commentItem.style.opacity = '0';
+            commentItem.style.transform = 'translateX(-100px)';
+            setTimeout(() => {
+              commentItem.remove();
+              showMessage('Komentarz został usunięty!', 'success');
+              
+              // Show empty state if no comments left
+              const commentsList = document.getElementById('comments-list');
+              if (commentsList.children.length === 0) {
+                commentsList.innerHTML = `
+                  <div class="text-center text-muted py-4">
+                    <i class="fas fa-comment-slash fa-3x mb-3"></i>
+                    <p>Brak komentarzy. Bądź pierwszy!</p>
+                  </div>
+                `;
+              }
+            }, 300);
+          } else {
+            showMessage('Błąd podczas usuwania komentarza', 'error');
+          }
+        });
+      }
+    }
+  });
+  
+  // Show message function
+  function showMessage(message, type = 'info') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    messageDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    messageDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        messageDiv.remove();
+      }
+    }, 5000);
+  }
+});
+</script>
 {% endblock %} 

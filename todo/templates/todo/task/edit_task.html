@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+  <div class="card shadow-lg border-0">
+    <div class="card-header bg-primary text-white text-center py-3">
+      <h2 class="mb-0">
+        <i class="fas fa-edit me-2"></i>
+        Edytuj zadanie
+      </h2>
+    </div>
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+          <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+            <i class="fas fa-heading me-2 text-primary"></i>Tytuł zadania
+          </label>
+          {{ form.title }}
+        </div>
+        
+        <div class="mb-3">
+          <label for="{{ form.priority.id_for_label }}" class="form-label fw-bold">
+            <i class="fas fa-exclamation-triangle me-2 text-primary"></i>Priorytet
+          </label>
+          {{ form.priority }}
+        </div>
+        
+        <div class="mb-3">
+          <label for="{{ form.project.id_for_label }}" class="form-label fw-bold">
+            <i class="fas fa-project-diagram me-2 text-primary"></i>Projekt
+          </label>
+          {{ form.project }}
+        </div>
+        
+        <div class="mb-3">
+          <label for="{{ form.due_date.id_for_label }}" class="form-label fw-bold">
+            <i class="fas fa-calendar-alt me-2 text-primary"></i>Data realizacji
+          </label>
+          {{ form.due_date }}
+        </div>
+        
+        <div class="mb-4">
+          <label class="form-label fw-bold">
+            <i class="fas fa-tags me-2 text-primary"></i>Tagi
+          </label>
+          
+          <!-- Interactive Tag Input -->
+          <div class="tag-input-container">
+            <div class="input-group mb-2">
+              <input type="text" id="new-tag-input" class="form-control" placeholder="Dodaj nowy tag...">
+              <button type="button" class="btn btn-outline-primary" id="add-tag-btn">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            
+            <!-- Selected Tags Display -->
+            <div id="selected-tags" class="mb-3">
+              <!-- Tags will be displayed here -->
+            </div>
+            
+            <!-- Existing Tags -->
+            <div class="existing-tags">
+              <h6 class="text-muted mb-2">Dostępne tagi:</h6>
+              <div class="tag-cloud" id="tag-cloud">
+                <!-- Existing tags will be loaded here -->
+              </div>
+            </div>
+            
+            <!-- Hidden form field for tags -->
+            <div style="display: none;">
+              {{ form.tags }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary btn-lg px-4 py-2 shadow-sm">
+            <i class="fas fa-save me-2"></i>
+            Zapisz zmiany
+          </button>
+          <a href="{% url 'task_detail' task.id %}" class="btn btn-outline-secondary btn-lg px-4 py-2 ms-3 shadow-sm">
+            <i class="fas fa-times me-2"></i>
+            Anuluj
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<style>
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.card {
+  border-radius: 15px;
+}
+
+.card-header {
+  border-radius: 15px 15px 0 0 !important;
+}
+
+.btn {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.tag-item {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin: 2px;
+  font-size: 0.9rem;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.tag-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.tag-item .remove-tag {
+  margin-left: 8px;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.tag-item .remove-tag:hover {
+  opacity: 1;
+}
+
+.tag-cloud .tag-option {
+  display: inline-block;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 4px 10px;
+  border-radius: 15px;
+  margin: 2px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tag-cloud .tag-option:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+.tag-cloud .tag-option.selected {
+  background: #0d6efd;
+  color: white;
+  border-color: #0d6efd;
+}
+
+.tag-input-container {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #e9ecef;
+}
+
+#selected-tags {
+  min-height: 40px;
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
+  border: 1px dashed #dee2e6;
+}
+
+#selected-tags:empty::before {
+  content: "Brak wybranych tagów";
+  color: #6c757d;
+  font-style: italic;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tagInput = document.getElementById('new-tag-input');
+  const addTagBtn = document.getElementById('add-tag-btn');
+  const selectedTagsContainer = document.getElementById('selected-tags');
+  const tagCloud = document.getElementById('tag-cloud');
+  const hiddenTagsField = document.querySelector('input[name="tags"]');
+  
+  let selectedTags = new Set();
+  let allTags = [];
+  
+  // Load existing tags from the form
+  function loadExistingTags() {
+    // Handle ModelMultipleChoiceField - check which checkboxes are checked
+    const checkedBoxes = document.querySelectorAll('input[name="tags"]:checked');
+    checkedBoxes.forEach(checkbox => {
+      const tagName = checkbox.nextElementSibling.textContent.trim();
+      selectedTags.add(tagName);
+    });
+    updateSelectedTagsDisplay();
+  }
+  
+  // Load all available tags from server
+  function loadAllTags() {
+    fetch('/api/tags/')
+      .then(response => response.json())
+      .then(data => {
+        allTags = data.tags || [];
+        updateTagCloud();
+      })
+      .catch(error => {
+        console.log('Error loading tags:', error);
+        // Fallback to existing checkboxes
+        const allCheckboxes = document.querySelectorAll('input[name="tags"]');
+        allTags = Array.from(allCheckboxes).map(checkbox => 
+          checkbox.nextElementSibling.textContent.trim()
+        );
+        updateTagCloud();
+      });
+  }
+  
+  // Update the display of selected tags
+  function updateSelectedTagsDisplay() {
+    selectedTagsContainer.innerHTML = '';
+    
+    if (selectedTags.size === 0) {
+      selectedTagsContainer.innerHTML = '<span class="text-muted">Brak wybranych tagów</span>';
+      return;
+    }
+    
+    selectedTags.forEach(tag => {
+      const tagElement = document.createElement('span');
+      tagElement.className = 'tag-item';
+      tagElement.innerHTML = `
+        ${tag}
+        <span class="remove-tag" onclick="removeTag('${tag}')">&times;</span>
+      `;
+      selectedTagsContainer.appendChild(tagElement);
+    });
+    
+    // Update checkboxes
+    const allCheckboxes = document.querySelectorAll('input[name="tags"]');
+    allCheckboxes.forEach(checkbox => {
+      const tagName = checkbox.nextElementSibling.textContent.trim();
+      checkbox.checked = selectedTags.has(tagName);
+    });
+  }
+  
+  // Update tag cloud display
+  function updateTagCloud() {
+    tagCloud.innerHTML = '';
+    
+    allTags.forEach(tag => {
+      const tagElement = document.createElement('span');
+      tagElement.className = 'tag-option';
+      tagElement.textContent = tag;
+      tagElement.onclick = () => toggleTag(tag);
+      
+      if (selectedTags.has(tag)) {
+        tagElement.classList.add('selected');
+      }
+      
+      tagCloud.appendChild(tagElement);
+    });
+  }
+  
+  // Add new tag
+  function addNewTag() {
+    const tagName = tagInput.value.trim();
+    if (tagName && !selectedTags.has(tagName)) {
+      // Check if tag already exists locally
+      if (!allTags.includes(tagName)) {
+        // Create new tag via API
+        createTagViaAPI(tagName);
+      } else {
+        // Tag exists, just add to selection
+        selectedTags.add(tagName);
+        tagInput.value = '';
+        updateSelectedTagsDisplay();
+        updateTagCloud();
+      }
+    }
+  }
+  
+  // Create new tag via API
+  function createTagViaAPI(tagName) {
+    fetch('/api/tags/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({ name: tagName })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Add new tag to local list
+        allTags.push(tagName);
+        selectedTags.add(tagName);
+        
+        // Create new checkbox for the new tag
+        createNewTagCheckbox(tagName, data.tag.id);
+        
+        tagInput.value = '';
+        updateSelectedTagsDisplay();
+        updateTagCloud();
+        
+        // Show success message
+        showMessage('Tag "' + tagName + '" został utworzony!', 'success');
+      } else {
+        showMessage('Błąd: ' + (data.error || 'Nie udało się utworzyć tagu'), 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error creating tag:', error);
+      showMessage('Błąd połączenia z serwerem', 'error');
+    });
+  }
+  
+  // Create new checkbox for a tag
+  function createNewTagCheckbox(tagName, tagId = null) {
+    const hiddenContainer = document.querySelector('div[style*="display: none"]');
+    const newCheckbox = document.createElement('input');
+    newCheckbox.type = 'checkbox';
+    newCheckbox.name = 'tags';
+    newCheckbox.value = tagId || tagName;
+    newCheckbox.checked = true;
+    
+    const newLabel = document.createElement('label');
+    newLabel.textContent = tagName;
+    
+    const newDiv = document.createElement('div');
+    newDiv.appendChild(newCheckbox);
+    newDiv.appendChild(newLabel);
+    
+    hiddenContainer.appendChild(newDiv);
+  }
+  
+  // Remove tag
+  window.removeTag = function(tag) {
+    selectedTags.delete(tag);
+    updateSelectedTagsDisplay();
+    updateTagCloud();
+  };
+  
+  // Toggle tag selection
+  function toggleTag(tag) {
+    if (selectedTags.has(tag)) {
+      selectedTags.delete(tag);
+    } else {
+      selectedTags.add(tag);
+    }
+    updateSelectedTagsDisplay();
+    updateTagCloud();
+  }
+  
+  // Event listeners
+  addTagBtn.addEventListener('click', addNewTag);
+  
+  tagInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addNewTag();
+    }
+  });
+  
+  // Initialize
+  loadExistingTags();
+  loadAllTags();
+  
+  // Auto-complete functionality
+  tagInput.addEventListener('input', function() {
+    const value = this.value.toLowerCase();
+    const suggestions = allTags.filter(tag => 
+      tag.toLowerCase().includes(value) && !selectedTags.has(tag)
+    );
+    
+    // You could add a dropdown with suggestions here
+    if (suggestions.length > 0 && value.length > 0) {
+      // Show suggestions (implement dropdown if needed)
+    }
+  });
+  
+  // Show message function
+  function showMessage(message, type = 'info') {
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    messageDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    messageDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Add to page
+    document.body.appendChild(messageDiv);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        messageDiv.remove();
+      }
+    }, 5000);
+  }
+});
+</script>
+{% endblock %}

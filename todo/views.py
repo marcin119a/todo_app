@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Task, Tag
 from project.models import Project
 from django.contrib.auth import login, logout
-from .forms import UserRegistrationForm, UserLoginForm
+from .forms import UserRegistrationForm, UserLoginForm, TaskForm
 from project.forms import ProjectForm
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
@@ -13,6 +13,13 @@ from django.shortcuts import render
 from comments.models import Comment
 from django.views.generic import UpdateView, DeleteView
 from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import UpdateView
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.models import User
 
 # Task list
 @login_required
@@ -100,3 +107,57 @@ class TaskDeleteView(DeleteView):
         return Task.objects.filter(user=self.request.user)
 
 
+class TaskUpdateView(UpdateView):
+    model = Task
+    form_class = TaskForm
+    template_name = 'todo/task/edit_task.html'
+    pk_url_kwarg = 'task_id'
+    success_url = reverse_lazy('task_list')
+
+    def get_queryset(self):
+        # Only tasks belonging to the current user
+        return Task.objects.filter(user=self.request.user)
+
+    def get_success_url(self):
+        # Redirect to task detail page after successful update
+        return reverse_lazy('task_detail', kwargs={'task_id': self.object.id})
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'Zadanie zostało zaktualizowane!')
+        return response
+
+
+@require_http_methods(["GET", "POST"])
+def api_tags(request):
+    """API endpoint to get all available tags and create new ones"""
+    if request.method == "GET":
+        tags = Tag.objects.all().values_list('name', flat=True)
+        return JsonResponse({'tags': list(tags)})
+    
+    elif request.method == "POST":
+        try:
+            import json
+            data = json.loads(request.body)
+            tag_name = data.get('name', '').strip()
+            
+            if not tag_name:
+                return JsonResponse({'error': 'Nazwa tagu jest wymagana'}, status=400)
+            
+            # Check if tag already exists
+            if Tag.objects.filter(name=tag_name).exists():
+                return JsonResponse({'error': 'Tag już istnieje'}, status=400)
+            
+            # Create new tag
+            new_tag = Tag.objects.create(name=tag_name)
+            return JsonResponse({
+                'success': True,
+                'tag': {
+                    'id': new_tag.id,
+                    'name': new_tag.name
+                }
+            })
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Nieprawidłowy format JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)

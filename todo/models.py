@@ -5,6 +5,7 @@ from project.models import Project
 
 User = get_user_model()
 
+
 class Tag(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
