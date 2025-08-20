@@ -4,8 +4,8 @@ This document contains a prioritized list of tasks to improve the Todo App codeb
 
 ## Security Improvements
 
-- [ ] Move SECRET_KEY to environment variables instead of hardcoding in settings.py
-- [ ] Configure DEBUG to be False in production environments
+- [x] Move SECRET_KEY to environment variables instead of hardcoding in settings.py
+- [x] Configure DEBUG to be False in production environments
 - [ ] Set up proper ALLOWED_HOSTS for production
 - [ ] Implement proper password reset functionality with secure token handling
 - [ ] Add rate limiting for authentication attempts

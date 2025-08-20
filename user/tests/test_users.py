@@ -1,7 +1,8 @@
 import pytest
 from django.core import mail
 from django.contrib.auth import get_user_model
-from todo.models import Task, Tag, Project, Comment
+from todo.models import Task, Tag, Project
+from comments.models import Comment
 from todo.tasks import send_task_reminder_email
 from datetime import timedelta
 from django.utils import timezone

@@ -136,18 +136,18 @@ def api_tags(request):
         return JsonResponse({'tags': list(tags)})
     
     elif request.method == "POST":
+        import json
+        data = json.loads(request.body)
+        tag_name = data.get('name', '').strip()
+        
+        if not tag_name:
+            return JsonResponse({'error': 'Nazwa tagu jest wymagana'}, status=400)
+        
+        # Check if tag already exists
+        if Tag.objects.filter(name=tag_name).exists():
+            return JsonResponse({'error': 'Tag już istnieje'}, status=400)
+        
         try:
-            import json
-            data = json.loads(request.body)
-            tag_name = data.get('name', '').strip()
-            
-            if not tag_name:
-                return JsonResponse({'error': 'Nazwa tagu jest wymagana'}, status=400)
-            
-            # Check if tag already exists
-            if Tag.objects.filter(name=tag_name).exists():
-                return JsonResponse({'error': 'Tag już istnieje'}, status=400)
-            
             # Create new tag
             new_tag = Tag.objects.create(name=tag_name)
             return JsonResponse({
@@ -157,7 +157,5 @@ def api_tags(request):
                     'name': new_tag.name
                 }
             })
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Nieprawidłowy format JSON'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)

@@ -406,36 +406,32 @@ document.addEventListener('DOMContentLoaded', function() {
         commentDiv.className = 'comment-item new-comment';
         commentDiv.setAttribute('data-comment-id', data.id);
         
-                 // Create comment HTML
-         let commentActions = '';
-         if (data.user === {{ request.user.id|default:0 }}) {
-           commentActions = `
-             <div class="comment-actions">
-               <button class="btn btn-sm btn-link edit-comment-btn">
-                 <i class="fas fa-edit"></i>
-               </button>
-               <button class="btn btn-sm btn-link text-danger delete-comment-btn">
-                 <i class="fas fa-trash"></i>
-               </button>
-             </div>
-           `;
-         }
-         
-         commentDiv.innerHTML = `
-           <div class="comment-header">
-             <div class="comment-author">
-               <i class="fas fa-user-circle text-primary me-2"></i>
-               <strong>${data.author}</strong>
-             </div>
-             <div class="comment-meta">
-               <small class="text-muted">${data.created_at ? data.created_at.slice(0,16).replace('T',' ') : ''}</small>
-               ${commentActions}
-             </div>
-           </div>
-           <div class="comment-content">
-             <span class="comment-text">${data.content}</span>
-           </div>
-         `;
+        commentDiv.innerHTML = `
+          <div class="comment-header">
+            <div class="comment-author">
+              <i class="fas fa-user-circle text-primary me-2"></i>
+              <strong>${data.author}</strong>
+            </div>
+            <div class="comment-meta">
+              <small class="text-muted">${data.created_at ? data.created_at.slice(0,16).replace('T',' ') : ''}</small>
+              {% if request.user.is_authenticated %}
+              ${data.user === {{ request.user.id }} ? `
+                <div class="comment-actions">
+                  <button class="btn btn-sm btn-link edit-comment-btn">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-sm btn-link text-danger delete-comment-btn">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              ` : ''}
+              {% endif %}
+            </div>
+          </div>
+          <div class="comment-content">
+            <span class="comment-text">${data.content}</span>
+          </div>
+        `;
         
         list.appendChild(commentDiv);
         document.getElementById('comment-content').value = '';

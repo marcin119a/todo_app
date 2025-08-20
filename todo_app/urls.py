@@ -21,13 +21,17 @@ from django.urls import include
 from user.urls import urlpatterns as user_urls
 from django.conf import settings
 from django.conf.urls.static import static
+from user.views import login_view, logout_view, register, account_summary, edit_account
 
 urlpatterns = [
         path('admin/', admin.site.urls),
         path('', include(todo_urls)),
-        path('user/', include(user_urls)),
+        path('', include(user_urls)),
         path('comments/', include('comments.urls')),
         path('project/', include('project.urls')),
+        path('login/', login_view, name='login'),
+        path('register/', register, name='register'),
+        path('logout/', logout_view, name='logout'),
 ]
 
 
