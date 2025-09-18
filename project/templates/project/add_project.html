@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2 class="mb-4">Dodaj nowy projekt</h2>
+  <h2 class="mb-4">Add new project</h2>
   <form method="post" class="needs-validation" novalidate>
     {% csrf_token %}
     {% for field in form %}
@@ -15,6 +15,6 @@
         {% endfor %}
       </div>
     {% endfor %}
-    <button type="submit" class="btn btn-primary">Dodaj projekt</button>
+    <button type="submit" class="btn btn-primary">Add new project</button>
   </form>
 {% endblock %} 

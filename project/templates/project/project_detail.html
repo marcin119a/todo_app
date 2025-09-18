@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+.comment-item {
+    transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    margin: -10px;
+}
+
+.avatar .badge {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.comment-content {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+}
+
+.comment-content p {
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+#commentContent {
+    resize: vertical;
+    min-height: 60px;
+    transition: border-color 0.3s ease;
+}
+
+#commentContent:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    min-width: 300px;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 0.125em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
+}
+
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Informacje o projekcie -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="mb-0">{{ project.name }}</h2>
+                </div>
+                <div class="card-body">
+                    {% if project.description %}
+                        <p class="card-text">{{ project.description }}</p>
+                    {% else %}
+                        <p class="text-muted">Brak opisu projektu.</p>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Właściciel:</strong> {{ project.user.username }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Liczba członków:</strong> {{ project.members.count }}
+                        </div>
+                    </div>
+                    
+                    {% if project.members.all %}
+                        <div class="mt-3">
+                            <strong>Członkowie zespołu:</strong>
+                            <ul class="list-unstyled">
+                                {% for member in project.members.all %}
+                                    <li><span class="badge bg-secondary">{{ member.username }}</span></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'edit_project' project.id %}" class="btn btn-outline-primary">Edytuj projekt</a>
+                    <a href="{% url 'project_list' %}" class="btn btn-outline-secondary">Powrót do listy</a>
+                </div>
+            </div>
+
+            <!-- Sekcja komentarzy -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        Komentarze
+                        <span id="commentCount" class="badge bg-secondary ms-2">{{ comments.count }}</span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Formularz dodawania komentarza -->
+                    <form id="commentForm" class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="commentContent" class="form-label">Dodaj komentarz:</label>
+                            <textarea class="form-control" id="commentContent" rows="3" placeholder="Wpisz treść komentarza..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Dodaj komentarz</button>
+                    </form>
+
+                    <!-- Lista komentarzy -->
+                    <div id="commentsList">
+                        {% for comment in comments %}
+                            <div class="comment-item border-bottom pb-3 mb-3" data-comment-id="{{ comment.id }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="avatar me-2">
+                                                <span class="badge bg-primary rounded-circle">{{ comment.author|first|upper }}</span>
+                                            </div>
+                                            <div>
+                                                <strong class="me-2">{{ comment.author }}</strong>
+                                                <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="comment-content">
+                                            <p class="mb-0">{{ comment.content|linebreaks }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-comments text-muted mb-2" style="font-size: 2rem;"></i>
+                                <p class="text-muted mb-0">Brak komentarzy. Bądź pierwszym, który doda komentarz!</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Zadania w projekcie -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Zadania w projekcie</h5>
+                </div>
+                <div class="card-body">
+                    {% for task in project.tasks.all %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="{% if task.completed %}text-decoration-line-through text-muted{% endif %}">
+                                {{ task.title }}
+                            </span>
+                            {% if task.completed %}
+                                <span class="badge bg-success">Ukończone</span>
+                            {% else %}
+                                <span class="badge bg-warning">W trakcie</span>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">Brak zadań w tym projekcie.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const commentForm = document.getElementById('commentForm');
+    const commentContent = document.getElementById('commentContent');
+    const commentsList = document.getElementById('commentsList');
+    const submitButton = commentForm.querySelector('button[type="submit"]');
+
+    // Funkcja do formatowania daty
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pl-PL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Funkcja do tworzenia HTML komentarza
+    function createCommentHTML(comment) {
+        return `
+            <div class="comment-item border-bottom pb-3 mb-3" data-comment-id="${comment.id}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="avatar me-2">
+                                <span class="badge bg-primary rounded-circle">${comment.author.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div>
+                                <strong class="me-2">${comment.author}</strong>
+                                <small class="text-muted">${comment.created_at}</small>
+                            </div>
+                        </div>
+                        <div class="comment-content">
+                            <p class="mb-0">${escapeHtml(comment.content)}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Funkcja do escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Funkcja do pokazywania powiadomień
+    function showNotification(message, type = 'success') {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const notification = document.createElement('div');
+        notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Automatyczne usunięcie po 4 sekundach
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 4000);
+    }
+
+    // Funkcja do aktualizacji licznika komentarzy
+    function updateCommentCount() {
+        const commentItems = commentsList.querySelectorAll('.comment-item');
+        const countElement = document.getElementById('commentCount');
+        if (countElement) {
+            countElement.textContent = commentItems.length;
+        }
+    }
+
+    // Obsługa formularza komentarza
+    commentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const content = commentContent.value.trim();
+        if (!content) {
+            showNotification('Treść komentarza nie może być pusta.', 'error');
+            commentContent.focus();
+            return;
+        }
+
+        // Wyłącz przycisk podczas wysyłania
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Dodawanie...';
+
+        // Wyślij komentarz przez AJAX
+        fetch('{% url "add_project_comment" project.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                content: content
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Dodaj nowy komentarz do listy
+                const commentHtml = createCommentHTML(data.comment);
+                
+                // Usuń komunikat o braku komentarzy jeśli istnieje
+                const emptyMessage = commentsList.querySelector('.text-muted');
+                if (emptyMessage && emptyMessage.textContent.includes('Brak komentarzy')) {
+                    emptyMessage.remove();
+                }
+                
+                // Dodaj nowy komentarz na początku listy z animacją
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = commentHtml;
+                const newComment = tempDiv.firstElementChild;
+                newComment.style.opacity = '0';
+                newComment.style.transform = 'translateY(-20px)';
+                newComment.style.transition = 'all 0.3s ease';
+                
+                commentsList.insertBefore(newComment, commentsList.firstChild);
+                
+                // Animacja pojawienia się
+                setTimeout(() => {
+                    newComment.style.opacity = '1';
+                    newComment.style.transform = 'translateY(0)';
+                }, 10);
+                
+                // Wyczyść formularz
+                commentContent.value = '';
+                commentContent.focus();
+                
+                // Aktualizuj licznik komentarzy
+                updateCommentCount();
+                
+                // Pokaż komunikat o sukcesie
+                showNotification('Komentarz został dodany pomyślnie!');
+                
+            } else {
+                showNotification('Błąd: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Wystąpił błąd podczas dodawania komentarza.', 'error');
+        })
+        .finally(() => {
+            // Przywróć przycisk
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Dodaj komentarz';
+        });
+    });
+
+    // Obsługa Enter w textarea (Shift+Enter = nowa linia, Enter = wysłanie)
+    commentContent.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            commentForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // Automatyczne rozszerzanie textarea
+    commentContent.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+    });
+
+    // Inicjalizacja licznika komentarzy
+    updateCommentCount();
+
+    // Dodaj licznik komentarzy do nagłówka jeśli nie istnieje
+    const commentHeader = document.querySelector('.card-header h4');
+    if (commentHeader && !document.getElementById('commentCount')) {
+        const countSpan = document.createElement('span');
+        countSpan.id = 'commentCount';
+        countSpan.className = 'badge bg-secondary ms-2';
+        countSpan.textContent = commentsList.querySelectorAll('.comment-item').length;
+        commentHeader.appendChild(countSpan);
+    }
+
+    // Funkcja do odświeżania komentarzy (opcjonalnie)
+    function refreshComments() {
+        fetch(`{% url 'project_detail' project.id %}`)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newCommentsList = doc.getElementById('commentsList');
+                if (newCommentsList) {
+                    commentsList.innerHTML = newCommentsList.innerHTML;
+                    updateCommentCount();
+                }
+            })
+            .catch(error => console.error('Error refreshing comments:', error));
+    }
+
+    // Automatyczne odświeżanie co 30 sekund (opcjonalnie)
+    // setInterval(refreshComments, 30000);
+
+    // Dodaj przycisk odświeżania (opcjonalnie)
+    const refreshButton = document.createElement('button');
+    refreshButton.className = 'btn btn-sm btn-outline-secondary ms-2';
+    refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i>';
+    refreshButton.title = 'Odśwież komentarze';
+    refreshButton.onclick = refreshComments;
+    
+    const commentHeaderDiv = commentHeader.parentNode;
+    commentHeaderDiv.appendChild(refreshButton);
+});
+</script>
+{% endblock %}
+

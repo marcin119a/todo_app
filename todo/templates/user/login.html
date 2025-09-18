@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2 class="mb-4">Logowanie</h2>
+  <h2 class="mb-4">Login to your account</h2>
   <form method="post" class="needs-validation" novalidate>
     {% csrf_token %}
     {% for field in form %}
@@ -20,6 +20,6 @@
         <div class="alert alert-danger">{{ message }}</div>
       {% endfor %}
     {% endif %}
-    <button type="submit" class="btn btn-primary">Zaloguj się</button>
+    <button type="submit" class="btn btn-primary">Login in</button>
   </form>
 {% endblock %} 

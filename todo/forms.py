@@ -38,7 +38,7 @@ class UserRegistrationForm(BootstrapFormMixin, forms.ModelForm):
 
 class UserLoginForm(BootstrapFormMixin, forms.Form):
     email = forms.EmailField(label='E-mail', widget=forms.EmailInput())
-    password = forms.CharField(label='Hasło', widget=forms.PasswordInput())
+    password = forms.CharField(label='Password', widget=forms.PasswordInput())
 
 
 class TaskForm(BootstrapFormMixin, forms.ModelForm):

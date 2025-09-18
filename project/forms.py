@@ -10,8 +10,8 @@ class ProjectForm(BootstrapFormMixin, forms.ModelForm):
         queryset=User.objects.all(),
         required=False,
         widget=forms.SelectMultiple(attrs={'class': 'form-control', 'id': 'id_members'}),
-        label='Członkowie projektu',
-        help_text='Wybierz użytkowników, którzy mają należeć do projektu.'
+        label='Participants',
+        help_text='Chose users who should be part of the project.'
     )
     class Meta:
         model = User._meta.get_field('projects').related_model

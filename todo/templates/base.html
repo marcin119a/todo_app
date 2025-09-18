@@ -37,23 +37,23 @@
             <a class="navbar-brand" href="/">Todo App</a>
             <div class="d-flex ms-auto">
                 {% if user.is_authenticated %}
-                    <a class="btn btn-link me-2" href="{% url 'edit_account' %}">Edycja profilu</a>
-                    <a class="btn btn-link me-2" href="{% url 'account_summary' %}">Statystyki</a>
-                    <a class="btn btn-link me-2" href="{% url 'calendar' %}">Kalendarz</a>
-                    <a class="btn btn-link me-2" href="{% url 'project_list' %}">Projekty</a>
-                    <a class="btn btn-link me-2" href="{% url 'password_change' %}">Zmiana hasła</a>
+                    <a class="btn btn-link me-2" href="{% url 'edit_account' %}">Edit your account</a>
+                    <a class="btn btn-link me-2" href="{% url 'account_summary' %}">Statistics</a>
+                    <a class="btn btn-link me-2" href="{% url 'calendar' %}">Calendar</a>
+                    <a class="btn btn-link me-2" href="{% url 'project_list' %}">Projects</a>
+                    <a class="btn btn-link me-2" href="{% url 'password_change' %}">Change password</a>
                     <form method="post" action="{% url 'logout' %}" class="d-inline">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger">Wyloguj</button>
+                        <button type="submit" class="btn btn-outline-danger">Logout</button>
                     </form>
                 {% else %}
-                    <a class="btn btn-outline-primary me-2" href="{% url 'register' %}">Rejestracja</a>
-                    <a class="btn btn-outline-success me-2" href="{% url 'login' %}">Logowanie</a>
-                    <a class="btn btn-link" href="{% url 'password_reset' %}">Reset hasła</a>
+                    <a class="btn btn-outline-primary me-2" href="{% url 'register' %}">Rejestration</a>
+                    <a class="btn btn-outline-success me-2" href="{% url 'login' %}">Login</a>
+                    <a class="btn btn-link" href="{% url 'password_reset' %}">Reset password</a>
                 {% endif %}
                 <div class="form-check form-switch ms-3">
                   <input class="form-check-input" type="checkbox" id="themeSwitch">
-                  <label class="form-check-label" for="themeSwitch" id="themeSwitchLabel">Ciemny motyw</label>
+                  <label class="form-check-label" for="themeSwitch" id="themeSwitchLabel">Dark mode</label>
                 </div>
             </div>
         </div>

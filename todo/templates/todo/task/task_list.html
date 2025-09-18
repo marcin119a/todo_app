@@ -4,8 +4,8 @@
 
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Twoje zadania</h2>
-    <a href="{% url 'add_project' %}" class="btn btn-primary">Dodaj projekt</a>
+    <h2> Your tasks</h2>
+    <a href="{% url 'add_project' %}" class="btn btn-primary">Add your project</a>
   </div>
   {% if messages %}
     {% for message in messages %}
@@ -16,7 +16,7 @@
 <form method="get" class="row g-3 mb-4">
   <div class="col-md-3">
     <select name="project" class="form-select">
-      <option value="">Wszystkie projekty</option>
+      <option value="">All projects</option>
       {% for project in projects %}
         <option value="{{ project.id }}" {% if project.id|stringformat:"s" == selected_project %}selected{% endif %}>{{ project.name }}</option>
       {% endfor %}
@@ -24,7 +24,7 @@
   </div>
   <div class="col-md-3">
     <select name="tag" class="form-select">
-      <option value="">Wszystkie tagi</option>
+      <option value="">All tags</option>
       {% for tag in tags %}
         <option value="{{ tag.id }}" {% if tag.id|stringformat:"s" == selected_tag %}selected{% endif %}>{{ tag.name }}</option>
       {% endfor %}
@@ -34,11 +34,11 @@
     <input type="date" name="due_date" class="form-control" value="{{ selected_due_date }}">
   </div>
   <div class="col-md-3">
-    <button type="submit" class="btn btn-primary w-100">Filtruj</button>
+    <button type="submit" class="btn btn-primary w-100">Filter</button>
   </div>
 </form>
 
-<a class="btn btn-primary mb-3" href="{% url 'add_task' %}">Dodaj zadanie</a>
+<a class="btn btn-primary mb-3" href="{% url 'add_task' %}">Add new task</a>
 <ul class="list-group">
   {% for task in tasks %}
     <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -49,7 +49,7 @@
           <a href="{% url 'task_detail' task.id %}" class="text-decoration-none">{{ task.title }}</a>
         {% endif %}
         <span class="badge bg-secondary ms-2">{{ task.due_date|date:'Y-m-d' }}</span>
-        <span class="badge bg-info text-dark ms-1">Priorytet: {{ task.priority }}</span>
+        <span class="badge bg-info text-dark ms-1">Priority: {{ task.priority }}</span>
         {% if task.project %}
           <span class="badge bg-primary ms-1">{{ task.project.name }}</span>
         {% endif %}
@@ -64,7 +64,7 @@
       </span>
     </li>
   {% empty %}
-    <li class="list-group-item">Brak zadań.</li>
+    <li class="list-group-item">There are no tasks.</li>
   {% endfor %}
 </ul>
 {% endblock %} 
